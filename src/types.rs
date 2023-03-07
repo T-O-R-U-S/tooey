@@ -2,7 +2,19 @@ use core::{any::Any, borrow::BorrowMut};
 use keyboard_types::KeyboardEvent;
 
 // TODO: Integrate ColourChar into the library to support colours!
-pub enum ColourChar {}
+pub enum ColourChar {
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    Rgb(u32, char),
+    Monochrome(char),
+}
+
+impl From<char> for ColourChar {
+    fn from(value: char) -> Self {
+        ColourChar::Monochrome(value)
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct Terminal<'a, const WIDTH: usize, const HEIGHT: usize, CHARACTER: BorrowMut<char> + Clone>
@@ -41,9 +53,14 @@ impl<
     fn prompt_on_update(
         _screen: &mut [[CHARACTER; WIDTH]; HEIGHT],
         _data: &dyn Any,
-        _update_payload: &TerminalUpdate,
+        update_payload: &TerminalUpdate,
     ) -> LifecycleEvent {
-        LifecycleEvent::Death
+        match update_payload {
+            TerminalUpdate::KeyboardEvent(_) | TerminalUpdate::MouseClick(_, _) => {
+                LifecycleEvent::Death
+            }
+            _ => LifecycleEvent::NoEvent,
+        }
     }
 
     fn prompt_on_draw(screen: &mut [[CHARACTER; WIDTH]; HEIGHT], data: &dyn Any) {

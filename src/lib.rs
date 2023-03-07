@@ -15,6 +15,7 @@ mod tests {
     fn prompt() {
         let mut terminal: Terminal<128, 128, char> = Terminal::new();
 
+        // This is peak testing right here.
         let prompt: TerminalObject<128, 128, char> =
             TerminalObject::prompt(&"Wassuhhh dude, how you doinggggggg???");
 

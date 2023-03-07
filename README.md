@@ -9,6 +9,8 @@ Tooey is a no-std TUI library written for my personal use in Sprinkles OS!
 It's currently monochromatic, but that can change :) (adding colour is a todo, since Sprinkles itself supports
 colour display (thank you VGA text mode :))
 
+The terminal must be of constant size
+
 ## Why is Tooey?
 
 I couldn't find any no-std TUI libraries, and that made me sad :(
@@ -45,3 +47,32 @@ text widget, or a number inside a counter).
 
 There is one of these in every layer, and their on_draw and on_update method gets called every time the
 screen is either drawn or an update is sent.
+
+### TerminalObject structure
+
+#### `on_update`
+
+The `on_update` function gets called every time the controller calls `.update()` on the terminal.
+
+This method passes an `TerminalUpdate` enum to the object's `on_update` method to inform it of
+the event.
+
+The `on_update` method itself takes three arguments; the virtual terminal's characters, the object's data, and the update payload.
+
+The `on_update` event then returns a `LifecycleEvent` to dictate what will happen to the object next.
+
+```rs
+/// Here's an example of what an on_update could look like!
+fn prompt_on_update(
+        _screen: &mut [[CHARACTER; WIDTH]; HEIGHT],
+        // If you want to access the data, you will have to downcast it.
+        _data: &dyn Any,
+        update_payload: &TerminalUpdate,
+    ) -> LifecycleEvent {
+        // Only die if the event was a keypress or mouseclick.
+        match update_payload {
+            TerminalUpdate::KeyboardEvent(_) | TerminalUpdate::MouseClick(_, _) => LifecycleEvent::Death,
+            _ => LifecycleEvent::NoEvent
+        }
+    }
+```

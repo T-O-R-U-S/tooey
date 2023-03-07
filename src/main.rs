@@ -1,3 +1,6 @@
+// This file is just used as a crude way to test.
+// Actual tests should be written in `lib.rs`, under the `tests` module.
+
 #![feature(generic_arg_infer)]
 
 use tooey::objects::screen_cleaner;
