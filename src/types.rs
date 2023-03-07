@@ -1,6 +1,9 @@
 use core::{any::Any, borrow::BorrowMut};
 use keyboard_types::KeyboardEvent;
 
+// TODO: Integrate ColourChar into the library to support colours!
+pub enum ColourChar {}
+
 #[derive(Clone, Copy)]
 pub struct Terminal<'a, const WIDTH: usize, const HEIGHT: usize, CHARACTER: BorrowMut<char> + Clone>
 {
