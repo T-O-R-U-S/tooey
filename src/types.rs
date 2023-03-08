@@ -5,14 +5,17 @@ use keyboard_types::KeyboardEvent;
 pub enum Colour {
     U8(u8),
     Rgb(u8, u8, u8),
-    #[default]
     Default,
+    #[default]
+    None,
 }
+
+pub trait Character: BorrowMut<ColourChar> + From<char> + Clone {}
 
 #[cfg(any(
     target_os = "windows",
-    target_os = "darwin",
-    target_os = "posix",
+    target_os = "macos",
+    target_os = "linux",
     target_family = "windows",
     target_family = "unix"
 ))]
@@ -23,12 +26,14 @@ impl Display for Colour {
                 Colour::U8(code) => write!(f, "\x1b[48;5;{code}m"),
                 Colour::Rgb(r, g, b) => write!(f, "\x1b[48;2;{r};{g};{b}m"),
                 Colour::Default => write!(f, "\x1b[49m"),
+                Colour::None => write!(f, ""),
             };
         }
         match self {
             Colour::U8(code) => write!(f, "\x1b[38;5;{code}m"),
             Colour::Rgb(r, g, b) => write!(f, "\x1b[38;2;{r};{g};{b}m"),
             Colour::Default => write!(f, "\x1b[49m"),
+            Colour::None => write!(f, ""),
         }
     }
 }
@@ -44,8 +49,8 @@ pub enum ColourChar {
 
 #[cfg(any(
     target_os = "windows",
-    target_os = "darwin",
-    target_os = "posix",
+    target_os = "macos",
+    target_os = "linux",
     target_family = "windows",
     target_family = "unix"
 ))]
@@ -55,7 +60,7 @@ impl Display for ColourChar {
             ColourChar::Colour(fg_colour, bg_colour, character) => {
                 write!(f, "{bg_colour:#}{fg_colour}{character}\x1b[49m")
             }
-            ColourChar::Monochrome(character) => write!(f, "{character}\x1b[49m"),
+            ColourChar::Monochrome(character) => write!(f, "{character}"),
             ColourChar::Empty => write!(f, " "),
         }
     }
@@ -164,10 +169,13 @@ impl<
 
         let mut text = text.chars();
 
-        for y in box_y..box_height {
+        // Print characters that fit in the box
+        'a: for y in box_y..box_height {
             for x in box_x..box_width {
+                // If there are no more character to print, exit the loop
                 let Some(character) = text.next() else {
-                    continue
+                    // Semi-rare loop labelling syntax: https://doc.rust-lang.org/rust-by-example/flow_control/loop/nested.html
+                    break 'a;
                 };
                 screen[y][x] = CHARACTER::from(character);
             }

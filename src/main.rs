@@ -3,7 +3,9 @@
 
 #![feature(generic_arg_infer)]
 
+use tooey::objects::colour_prompt;
 use tooey::objects::screen_cleaner;
+use tooey::types::Colour;
 use tooey::types::ColourChar;
 use tooey::types::Terminal;
 use tooey::types::TerminalObject;
@@ -14,7 +16,9 @@ fn main() {
 
     let prompt = TerminalObject::prompt(&"Kachow!");
 
-    terminal.insert_object(screen_cleaner(), 0).ok();
+    terminal
+        .insert_object(screen_cleaner(&Colour::U8(128)), 0)
+        .ok();
 
     terminal.insert_object(prompt, 1).ok();
 
@@ -26,9 +30,17 @@ fn main() {
         }
         println!();
     }
-    let prompt = TerminalObject::prompt(&"This prompt should cover the last one!!");
+    println!();
 
-    terminal.insert_object(prompt, 2).ok();
+    let colour_prompt = colour_prompt(&(
+        Colour::U8(25),
+        Colour::U8(25),
+        "This prompt should overwrite the last one!",
+    ));
+
+    //let prompt = TerminalObject::prompt(&"This prompt should cover the last one!!");
+
+    terminal.insert_object(colour_prompt, 2).ok();
 
     terminal.frame();
 
@@ -38,6 +50,8 @@ fn main() {
         }
         println!()
     }
+
+    println!();
 
     terminal.update(TerminalUpdate::MouseClick(0, 0));
 
