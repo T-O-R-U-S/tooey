@@ -4,20 +4,19 @@
 #![feature(generic_arg_infer)]
 
 use tooey::objects::screen_cleaner;
+use tooey::types::ColourChar;
 use tooey::types::Terminal;
 use tooey::types::TerminalObject;
 use tooey::types::TerminalUpdate;
 
 fn main() {
-    let mut terminal: Terminal<64, 32, char> = Terminal::new();
+    let mut terminal: Terminal<64, 32, ColourChar> = Terminal::new();
 
-    let prompt: TerminalObject<_, _, _> = TerminalObject::prompt(&"Kachow!");
+    let prompt = TerminalObject::prompt(&"Kachow!");
 
     terminal.insert_object(screen_cleaner(), 0).ok();
 
     terminal.insert_object(prompt, 1).ok();
-
-    print!("\u{001b}[42m");
 
     terminal.frame();
 
@@ -25,14 +24,9 @@ fn main() {
         for j in i {
             print!("{j}");
         }
-        print!("\u{001b}[40m");
         println!();
-        print!("\u{001b}[42m");
     }
-    print!("\u{001b}[40m");
-
-    let prompt: TerminalObject<_, _, _> =
-        TerminalObject::prompt(&"This prompt should overwrite the last one!!");
+    let prompt = TerminalObject::prompt(&"This prompt should cover the last one!!");
 
     terminal.insert_object(prompt, 2).ok();
 
@@ -42,13 +36,10 @@ fn main() {
         for j in i {
             print!("{j}");
         }
-        print!("\u{001b}[40m");
-        println!();
-        print!("\u{001b}[42m");
+        println!()
     }
-    print!("\u{001b}[40m");
 
-    terminal.update(TerminalUpdate::Ping);
+    terminal.update(TerminalUpdate::MouseClick(0, 0));
 
     terminal.frame();
 
@@ -56,9 +47,6 @@ fn main() {
         for j in i {
             print!("{j}");
         }
-        print!("\u{001b}[40m");
         println!();
-        print!("\u{001b}[42m");
     }
-    print!("\u{001b}[40m");
 }

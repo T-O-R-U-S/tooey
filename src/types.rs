@@ -1,13 +1,74 @@
-use core::{any::Any, borrow::BorrowMut};
+use core::{any::Any, borrow::BorrowMut, fmt::Display};
 use keyboard_types::KeyboardEvent;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Colour {
+    U8(u8),
+    Rgb(u8, u8, u8),
+    #[default]
+    Default,
+}
+
+#[cfg(any(
+    target_os = "windows",
+    target_os = "darwin",
+    target_os = "posix",
+    target_family = "windows",
+    target_family = "unix"
+))]
+impl Display for Colour {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if f.alternate() {
+            return match self {
+                Colour::U8(code) => write!(f, "\x1b[48;5;{code}m"),
+                Colour::Rgb(r, g, b) => write!(f, "\x1b[48;2;{r};{g};{b}m"),
+                Colour::Default => write!(f, "\x1b[49m"),
+            };
+        }
+        match self {
+            Colour::U8(code) => write!(f, "\x1b[38;5;{code}m"),
+            Colour::Rgb(r, g, b) => write!(f, "\x1b[38;2;{r};{g};{b}m"),
+            Colour::Default => write!(f, "\x1b[49m"),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 // TODO: Integrate ColourChar into the library to support colours!
 pub enum ColourChar {
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    Rgb(u32, char),
+    Colour(Colour, Colour, char),
     Monochrome(char),
+    #[default]
+    Empty,
+}
+
+#[cfg(any(
+    target_os = "windows",
+    target_os = "darwin",
+    target_os = "posix",
+    target_family = "windows",
+    target_family = "unix"
+))]
+impl Display for ColourChar {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ColourChar::Colour(fg_colour, bg_colour, character) => {
+                write!(f, "{bg_colour:#}{fg_colour}{character}\x1b[49m")
+            }
+            ColourChar::Monochrome(character) => write!(f, "{character}\x1b[49m"),
+            ColourChar::Empty => write!(f, " "),
+        }
+    }
+}
+
+impl From<ColourChar> for char {
+    fn from(value: ColourChar) -> Self {
+        match value {
+            ColourChar::Colour(_, _, character) => character,
+            ColourChar::Monochrome(character) => character,
+            ColourChar::Empty => ' ',
+        }
+    }
 }
 
 impl From<char> for ColourChar {
@@ -16,9 +77,13 @@ impl From<char> for ColourChar {
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct Terminal<'a, const WIDTH: usize, const HEIGHT: usize, CHARACTER: BorrowMut<char> + Clone>
-{
+#[derive(Clone)]
+pub struct Terminal<
+    'a,
+    const WIDTH: usize,
+    const HEIGHT: usize,
+    CHARACTER: BorrowMut<ColourChar> + Clone,
+> {
     pub characters: [[CHARACTER; WIDTH]; HEIGHT],
     objects: [TerminalObject<'a, WIDTH, HEIGHT, CHARACTER>; 256],
 }
@@ -28,7 +93,7 @@ pub struct TerminalObject<
     'a,
     const WIDTH: usize,
     const HEIGHT: usize,
-    CHARACTER: BorrowMut<char> + Clone,
+    CHARACTER: BorrowMut<ColourChar> + Clone,
 > {
     pub on_update:
         fn(&mut [[CHARACTER; WIDTH]; HEIGHT], &dyn Any, &TerminalUpdate) -> LifecycleEvent,
@@ -47,7 +112,7 @@ impl<
         'a,
         const WIDTH: usize,
         const HEIGHT: usize,
-        CHARACTER: BorrowMut<char> + Clone + From<char>,
+        CHARACTER: BorrowMut<ColourChar> + Clone + From<ColourChar> + From<char>,
     > TerminalObject<'a, WIDTH, HEIGHT, CHARACTER>
 {
     fn prompt_on_update(
@@ -116,7 +181,7 @@ impl<
         }
     }
 
-    pub fn prompt(text: &'static &str) -> Self {
+    pub fn prompt(text: &'a dyn Any) -> Self {
         Self {
             on_update: Self::prompt_on_update,
             on_draw: Self::prompt_on_draw,
@@ -146,7 +211,7 @@ impl<
         'a,
         const WIDTH: usize,
         const HEIGHT: usize,
-        CHARACTER: BorrowMut<char> + Clone + From<char>,
+        CHARACTER: BorrowMut<ColourChar> + Clone + From<ColourChar> + From<char>,
     > Terminal<'a, WIDTH, HEIGHT, CHARACTER>
 {
     pub fn new() -> Self

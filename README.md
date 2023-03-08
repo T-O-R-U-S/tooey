@@ -1,4 +1,4 @@
-# Tooey -- the no-std barebones TUI library
+# Tooey -- the no-std bare-bones TUI library
 
 Made for use with [SprinklesOS](https://github.com/T-O-R-U-S/sprinkles_os); Tooey is (for the moment) monochromatic.
 
