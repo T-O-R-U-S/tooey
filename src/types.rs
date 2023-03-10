@@ -1,4 +1,4 @@
-use core::{any::Any, borrow::BorrowMut, fmt::Display};
+use core::{any::Any, array, borrow::BorrowMut, fmt::Display};
 use keyboard_types::KeyboardEvent;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -224,11 +224,11 @@ impl<
 {
     pub fn new() -> Self
     where
-        CHARACTER: Default + Copy + From<char>,
+        CHARACTER: Default,
     {
         Self {
-            characters: [[CHARACTER::from(' '); WIDTH]; HEIGHT],
-            objects: [TerminalObject::empty(); 256],
+            characters: array::from_fn(|_| array::from_fn(|_| CHARACTER::default())),
+            objects: array::from_fn(|_| TerminalObject::empty()),
         }
     }
 

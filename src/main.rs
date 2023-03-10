@@ -33,8 +33,8 @@ fn main() {
     println!();
 
     let colour_prompt = colour_prompt(&(
-        Colour::U8(25),
-        Colour::U8(25),
+        Colour::Rgb(255, 255, 255),
+        Colour::Rgb(0, 128, 0),
         "This prompt should overwrite the last one!",
     ));
 

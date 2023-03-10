@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 keyboard-types = "0.6.2"
+
+[features]
+no_std = []
+std = []

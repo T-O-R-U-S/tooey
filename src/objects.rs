@@ -1,6 +1,6 @@
 use core::borrow::BorrowMut;
 
-use crate::types::{Colour, ColourChar, LifecycleEvent, TerminalObject, TerminalUpdate};
+use crate::types::{Colour, ColourChar, LifecycleEvent, Terminal, TerminalObject, TerminalUpdate};
 
 /// This object clears the screen entirely on every frame; this should always be placed at layer zero to ensure that it does not wipe
 /// living objects.
@@ -70,6 +70,7 @@ pub fn colour_prompt<
 
             let mut overflow_flag = false;
 
+            // Clamp box_height and box_width to prevent out-of-bounds index in case of large input.
             if box_width > WIDTH {
                 box_height += box_width / WIDTH;
                 box_width = WIDTH;
@@ -95,7 +96,7 @@ pub fn colour_prompt<
             }
 
             if overflow_flag {
-                // change last three characters to "..." to represent missing info
+                // change last three characters to "..." to represent the fact that info is incomplete
                 screen[HEIGHT - 1][WIDTH - 1] =
                     ColourChar::Colour(*fg_colour, *bg_colour, '.').into();
                 screen[HEIGHT - 1][WIDTH - 2] =
@@ -106,4 +107,27 @@ pub fn colour_prompt<
         },
         data,
     }
+}
+
+pub fn vertical_split<
+    'a,
+    const WIDTH: usize,
+    const HEIGHT: usize,
+    const X_SPLIT: usize,
+    CHARACTER: BorrowMut<ColourChar> + From<ColourChar> + From<char> + Clone + 'a,
+>(
+    terminal: &mut Terminal<'a, WIDTH, HEIGHT, CHARACTER>,
+) -> TerminalObject<'a, WIDTH, HEIGHT, CHARACTER>
+where
+    &'a mut CHARACTER: Clone + BorrowMut<ColourChar> + From<ColourChar> + Default + From<char>,
+    [(); WIDTH - X_SPLIT]:,
+{
+    let first_half = &mut terminal.characters[..][0..X_SPLIT];
+    let second_half = &mut terminal.characters[..][X_SPLIT..];
+
+    let first_half_terminal: Terminal<X_SPLIT, HEIGHT, &mut CHARACTER> = Terminal::new();
+    let second_half_terminal: Terminal<{ WIDTH - X_SPLIT }, HEIGHT, &mut CHARACTER> =
+        Terminal::new();
+
+    TerminalObject::empty()
 }

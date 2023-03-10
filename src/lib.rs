@@ -1,7 +1,14 @@
-#![feature(generic_arg_infer)]
-#![feature(int_roundings)]
+#![feature(generic_arg_infer, generic_const_exprs, int_roundings)]
 #![cfg_attr(
-    not(any(test, target_family = "unix", target_family = "windows")),
+    any(
+        not(any(
+            test,
+            target_family = "unix",
+            target_family = "windows",
+            feature = "std"
+        )),
+        feature = "no_std"
+    ),
     no_std
 )]
 
